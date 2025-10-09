@@ -26,7 +26,7 @@ REF_LAT = float(os.getenv("HT_REF_LAT", "31.283"))
 REF_LON = float(os.getenv("HT_REF_LON", "34.234"))
 
 # Beta testing: YES = messages persist until overridden, NO = auto-clear after hold_s
-BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "YES").upper()
+BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "NO").upper()
 
 def _init_device():
     try:

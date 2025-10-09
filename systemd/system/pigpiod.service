@@ -1,0 +1,12 @@
+[Unit]
+Description=Pigpio daemon for GPIO access
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/pigpiod
+ExecStop=/bin/systemctl kill pigpiod
+Type=simple
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

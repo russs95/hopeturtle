@@ -20,20 +20,20 @@ Type=oneshot
 Environment=HT_GPS_MODE=soft
 Environment=HT_GPS_SOFT_RX=17
 Environment=HT_BAUD=9600
-Environment=HT_DATA_DIR=/home/hopeturtle002/hopeturtle/data
+Environment=HT_DATA_DIR=/home/hopeturtle/hopeturtle/data
 
 # ---- Working directory ----
 WorkingDirectory=/home/hopeturtle002/hopeturtle
 
 # ---- Main command ----
-ExecStart=/usr/bin/python3 /home/hopeturtle002/hopeturtle/src/gps_snapshot.py
+ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/gps_snapshot.py
 
 # ---- OLED feedback (show brief summary after logging) ----
-ExecStartPost=/usr/bin/python3 /home/hopeturtle002/hopeturtle/src/oled_status.py brief
+ExecStartPost=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/oled_status.py brief
 
 # ---- Run as user ----
-User=hopeturtle002
-Group=hopeturtle002
+User=hopeturtle
+Group=hopeturtle
 
 # ---- Lower priority ----
 Nice=10

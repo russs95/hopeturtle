@@ -7,10 +7,12 @@ USER=$(whoami)
 HOME_DIR=$(eval echo ~$USER)
 REPO_DIR="$HOME_DIR/hopeturtle"
 DATA_DIR="$REPO_DIR/data"
+LOG_FILE="/var/log/hopeturtle-install.log"
 
 echo "==> Repo: $REPO_DIR"
 echo "==> Using user: $USER (home: $HOME_DIR)"
 echo "==> Data dir: $DATA_DIR"
+echo "==> Logging to $LOG_FILE"
 
 # ---- Ensure dependencies ----
 echo "==> Installing dependencies..."
@@ -20,7 +22,7 @@ sudo apt-get install -y python3-serial python3-pigpio jq python3-pil python3-num
 # ---- Ensure pigpiod daemon installed ----
 echo "==> Checking pigpiod installation..."
 if ! command -v /usr/local/bin/pigpiod >/dev/null 2>&1; then
-    echo "⚠️  pigpiod not found in /usr/local/bin — installing from source..."
+    echo "⚠️  pigpiod not found — installing from source..."
     cd /tmp
     rm -rf pigpio
     git clone https://github.com/joan2937/pigpio.git
@@ -71,25 +73,41 @@ fi
 echo "==> Installing OLED dependencies..."
 python3 -m pip install --upgrade --break-system-packages luma.oled luma.core || echo "⚠️ OLED libs install failed, continuing..."
 
-# ---- Install systemd services ----
-echo "==> Installing HopeTurtle services..."
+# ---- Install HopeTurtle services ----
+echo "==> Installing HopeTurtle systemd service files..."
 sudo cp systemd/hopeturtle-gps.* /etc/systemd/system/
 sudo cp systemd/hopeturtle-boot.service /etc/systemd/system/
 sudo cp systemd/hopeturtle-button.service /etc/systemd/system/
-
 sudo systemctl daemon-reload
-echo "==> Enabling HopeTurtle systemd services..."
-sudo systemctl enable --now hopeturtle-gps.timer || echo "⚠️ GPS timer failed to enable."
-sudo systemctl enable --now hopeturtle-boot.service || echo "⚠️ Boot OLED service failed to enable."
-sudo systemctl enable --now hopeturtle-button.service || echo "⚠️ Button trigger service failed to enable."
 
-# ---- Removed GUI autostart block ----
-# No autostart setup (headless configuration)
+# ---- Enable services safely (non-blocking) ----
+echo "==> Enabling HopeTurtle services (non-blocking)..."
+SERVICES=(
+  "pigpiod"
+  "hopeturtle-gps.timer"
+  "hopeturtle-boot.service"
+  "hopeturtle-button.service"
+)
+
+for svc in "${SERVICES[@]}"; do
+    echo "➡️  Enabling $svc..."
+    {
+        timeout 10 sudo systemctl enable --now "$svc"
+        STATUS=$?
+        if [ $STATUS -eq 0 ]; then
+            echo "✅ $svc enabled successfully."
+        else
+            echo "⚠️ Failed to enable $svc (exit code $STATUS). Check systemctl status $svc for details."
+        fi
+    } 2>&1 | tee -a "$LOG_FILE"
+done
+
+# ---- Skip GUI autostart (headless mode) ----
 echo "==> Skipping GUI autostart setup (headless mode)."
 
 # ---- Trigger one manual GPS run ----
 echo "==> Triggering one manual GPS run..."
-sudo systemctl start hopeturtle-gps.service || echo "⚠️ Manual GPS start failed."
+sudo systemctl start hopeturtle-gps.service || echo "⚠️ Manual GPS run failed."
 
 # ---- Final Summary ----
 cat <<'EOF'
@@ -110,3 +128,4 @@ python3 src/oled_status.py notify-install || echo "⚠️ OLED notification skip
 echo "✅ Install complete."
 echo "💡 Services active: pigpiod, hopeturtle-gps.timer, hopeturtle-boot.service, hopeturtle-button.service"
 echo "⚠️ Reboot required if UART was newly enabled."
+echo "📜 Detailed log saved to $LOG_FILE"

@@ -1,4 +1,3 @@
-sudo tee /etc/systemd/system/hopeturtle-button.service > /dev/null <<'EOF'
 [Unit]
 Description=HopeTurtle Button Trigger Service
 After=multi-user.target
@@ -16,4 +15,3 @@ Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
-EOF

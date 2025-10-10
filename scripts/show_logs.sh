@@ -12,11 +12,17 @@ cat <<'BANNER'
 # HopeTurtle GPS Service is live! 🐢
 BANNER
 echo
-echo "Following: journalctl -fu hopeturtle-gps.service"
-echo "Press Ctrl+C to exit."
+
+if ! command -v journalctl >/dev/null 2>&1; then
+  echo "⚠️  journalctl not found. Please install systemd or view logs manually."
+  exit 1
+fi
+
+echo "📡 Following logs for: hopeturtle-gps.service"
+echo "🕒 Showing the last 10 minutes of logs..."
+echo "Press Ctrl+C to stop."
 echo
 
-# Follow logs from the last few minutes and keep tailing
 journalctl -u hopeturtle-gps.service --since "10 min ago" --no-pager
 echo
 journalctl -fu hopeturtle-gps.service

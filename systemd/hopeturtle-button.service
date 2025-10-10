@@ -1,0 +1,16 @@
+[Unit]
+Description=HopeTurtle Button Trigger Service
+After=multi-user.target
+Wants=pigpiod.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/button_trigger.py
+WorkingDirectory=/home/hopeturtle/hopeturtle/src
+Restart=always
+User=hopeturtle
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+EOF

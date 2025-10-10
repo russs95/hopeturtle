@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 DATA_DIR = os.path.expanduser(os.getenv("HT_DATA_DIR", "~/hopeturtle/data"))
 REF_LAT = float(os.getenv("HT_REF_LAT", "31.283"))
 REF_LON = float(os.getenv("HT_REF_LON", "34.234"))
-BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "NO").upper()
+BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "YES").upper()
 
 # ---------- OLED Setup ----------
 def _init_device():
@@ -62,11 +62,11 @@ def _show_lines(device, lines, hold_s=3, center=False):
 
     # dynamic line spacing
     if H <= 32:
-        line_h = 10
-    elif H <= 48:
         line_h = 12
-    else:
+    elif H <= 48:
         line_h = 14
+    else:
+        line_h = 16
 
     total_h = len(lines) * line_h
     y0 = (H - total_h) // 2 if center else 0

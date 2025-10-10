@@ -14,7 +14,7 @@ ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/oled_status.py boot-a
 # 3) Show last known distance to Al Mawasi
 ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/oled_status.py distance
 # 4) Optional: celebratory swim
-# ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/oled_status.py swim
+ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/oled_status.py swim
 
 [Install]
 WantedBy=multi-user.target

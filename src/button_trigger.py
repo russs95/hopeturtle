@@ -24,18 +24,18 @@ DATA_DIR = os.path.expanduser("~/hopeturtle/data")
 
 # ---------- OLED Helper ----------
 def oled_show(lines):
-    """Helper to display text on OLED via oled_status.py."""
+    """Display text on OLED using the custom command."""
     try:
         subprocess.run(
-            ["python3", "/home/hopeturtle/hopeturtle/src/oled_status.py"] + lines,
+            ["python3", "/home/hopeturtle/hopeturtle/src/oled_status.py", "custom"] + lines,
             check=False,
         )
     except Exception as e:
         print(f"[WARN] OLED display failed: {e}")
 
+
 # ---------- Swimming Animation ----------
 def swim_animation(duration_s=1.0, fps=8):
-    """Show a short swimming animation on OLED."""
     frames = [
         [
             "   _________    ____ ",
@@ -54,14 +54,14 @@ def swim_animation(duration_s=1.0, fps=8):
     ]
     frame_time = 1.0 / fps
     end_time = time.time() + duration_s
-    print("[OLED] Showing turtle swim animation...")
     while time.time() < end_time:
         for frame in frames:
             subprocess.run(
-                ["python3", "/home/hopeturtle/hopeturtle/src/oled_status.py"] + frame,
+                ["python3", "/home/hopeturtle/hopeturtle/src/oled_status.py", "custom"] + frame,
                 check=False,
             )
             time.sleep(frame_time)
+
 
 # ---------- Latest Fix Parser ----------
 def latest_fix():

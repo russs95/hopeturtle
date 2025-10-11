@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 DATA_DIR = os.path.expanduser(os.getenv("HT_DATA_DIR", "~/hopeturtle/data"))
 REF_LAT = float(os.getenv("HT_REF_LAT", "31.283"))
 REF_LON = float(os.getenv("HT_REF_LON", "34.234"))
-BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "YES").upper()
+BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "NO").upper()
 
 # ---------- OLED Setup ----------
 def _init_device():

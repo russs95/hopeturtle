@@ -24,14 +24,15 @@ DATA_DIR = os.path.expanduser("~/hopeturtle/data")
 
 # ---------- OLED Helper ----------
 def oled_show(lines):
-    """Helper to display text on OLED via oled_status.py."""
+    """Helper to display text on OLED via the 'custom' command."""
     try:
         subprocess.run(
-            ["python3", "/home/hopeturtle/hopeturtle/src/oled_status.py"] + lines,
-            check=False,
+            ["python3", "/home/hopeturtle/hopeturtle/src/oled_status.py", "custom"] + lines,
+            check=False
         )
     except Exception as e:
         print(f"[WARN] OLED display failed: {e}")
+
 
 # ---------- Swimming Animation ----------
 def swim_animation(duration_s=1.0, fps=8):

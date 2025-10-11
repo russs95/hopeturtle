@@ -7,11 +7,13 @@
 #
 # HopeTurtle GPS Service
 # Runs gps_snapshot.py once (systemd timer calls this every 5 minutes).
-# Reads GPS from soft-serial GPIO17 by default and logs CSV + JSON prototype.
-# After each run, displays abbreviated fix info on the OLED.
+# Reads GPS from soft-serial GPIO17 and logs CSV + JSON output.
+# After each run, displays fix info briefly on the OLED.
 
 [Unit]
 Description=HopeTurtle GPS one-shot logger
+After=network.target pigpiod.service
+Wants=pigpiod.service
 
 [Service]
 Type=oneshot
@@ -21,9 +23,10 @@ Environment=HT_GPS_MODE=soft
 Environment=HT_GPS_SOFT_RX=17
 Environment=HT_BAUD=9600
 Environment=HT_DATA_DIR=/home/hopeturtle/hopeturtle/data
+Environment=PYTHONUNBUFFERED=1
 
 # ---- Working directory ----
-WorkingDirectory=/home/hopeturtle002/hopeturtle
+WorkingDirectory=/home/hopeturtle/hopeturtle/src
 
 # ---- Main command ----
 ExecStart=/usr/bin/python3 /home/hopeturtle/hopeturtle/src/gps_snapshot.py
@@ -37,3 +40,7 @@ Group=hopeturtle
 
 # ---- Lower priority ----
 Nice=10
+
+# ---- Restart policy ----
+# (only runs when timer calls it, so no persistent process)
+RemainAfterExit=no

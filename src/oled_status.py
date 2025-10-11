@@ -208,21 +208,58 @@ def main():
         traceback.print_exc()
     return 0
 
-
 # ---------- Custom Text Display ----------
-def cmd_custom(args):
+def _show_custom(device, args):
     """
     Display custom text lines from CLI arguments.
     Usage: python3 oled_status.py custom "Line 1" "Line 2" ...
     """
-    lines = args[1:]
+    lines = args[2:]
     if not lines:
         lines = ["(no text)"]
     _show_lines(device, lines, hold_s=2, center=True)
 
 
-if __name__ == "__main__":
-  elif cmd == "custom":
-    cmd_custom(sys.argv[1:])
+# ---------- Main ----------
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: oled_status.py [boot-waking|boot-alive|gps-searching|swim|distance|brief|custom]")
+        return 0
 
+    device = _init_device()
+    cmd = sys.argv[1].lower()
+
+    try:
+        if cmd == "boot-waking":
+            _show_lines(device, ["Hope Turtle", "is waking up!"], hold_s=3, center=True)
+
+        elif cmd == "boot-alive":
+            _show_lines(device, ["Hope Turtle", "is alive!"], hold_s=3, center=True)
+
+        elif cmd == "gps-searching":
+            _show_lines(device, ["GPS:", "Searching satellites…"], hold_s=3, center=True)
+
+        elif cmd == "swim":
+            _swim_animation(device)
+
+        elif cmd == "distance":
+            _show_last_distance(device)
+
+        elif cmd == "brief":
+            _show_brief(device)
+
+        elif cmd == "custom":
+            _show_custom(device, sys.argv)
+
+        else:
+            _show_lines(device, [f"Unknown cmd:", cmd], hold_s=2, center=True)
+
+    except Exception:
+        traceback.print_exc()
+
+    return 0
+
+
+if __name__ == "__main__":
     sys.exit(main())
+

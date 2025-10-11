@@ -208,5 +208,21 @@ def main():
         traceback.print_exc()
     return 0
 
+
+# ---------- Custom Text Display ----------
+def cmd_custom(args):
+    """
+    Display custom text lines from CLI arguments.
+    Usage: python3 oled_status.py custom "Line 1" "Line 2" ...
+    """
+    lines = args[1:]
+    if not lines:
+        lines = ["(no text)"]
+    _show_lines(device, lines, hold_s=2, center=True)
+
+
 if __name__ == "__main__":
+  elif cmd == "custom":
+    cmd_custom(sys.argv[1:])
+
     sys.exit(main())

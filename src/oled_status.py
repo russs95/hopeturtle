@@ -85,46 +85,117 @@ def _show_lines(device, lines, hold_s=4, center=False):
     time.sleep(hold_s)
     _clear(device)
 
-# ---------- Swim / ASCII Turtle ----------
-def _swim_animation(device, duration_s=2.0):
-    """Show static HopeTurtle ASCII art for 2 seconds (fills 4 lines)."""
-    turtle_art = [
-        "   _________    ____   ",
-        "  /           \\ |  o | ",
-        " |            |/ ___\\| ",
-        " |____________|_/      ",
-        "   |__|  |__|          ",
+def _swim_animation(device):
+    """Show two HopeTurtle ASCII frames for a smooth 2-second 'swim'."""
+    turtle_frames = [
+        [
+            "   _________    ____   ",
+            "  /           \\ |  o | ",
+            " |            |/ ___\\| ",
+            " |____________|_/      ",
+            "   |__|  |__|          ",
+        ],
+        [
+            "   _________    ____   ",
+            "  /           \\ |  o | ",
+            " |            |/ ___\\| ",
+            " |____________|_/      ",
+            "   |_  |__|  _|        ",
+        ],
     ]
 
     if device is None:
-        print("[OLED] (simulated) HopeTurtle ASCII:")
-        for line in turtle_art:
-            print(line)
-        time.sleep(duration_s)
+        print("[OLED] (simulated swim)")
+        for frame in turtle_frames:
+            for line in frame:
+                print(line)
+            print("—")
+            time.sleep(1.0)
         return
 
     from PIL import Image, ImageDraw, ImageFont
-    img, draw, font = _prep_canvas(device)
-    W, H = device.width, device.height
-
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
     except Exception:
         font = ImageFont.load_default()
 
-    line_h = 16
-    total_h = len(turtle_art) * line_h
-    y0 = (H - total_h) // 2
+    for frame in turtle_frames:
+        img = Image.new("1", (device.width, device.height), 0)
+        draw = ImageDraw.Draw(img)
 
-    for i, t in enumerate(turtle_art):
+        line_h = 10
+        total_h = len(frame) * line_h
+        y0 = (device.height - total_h) // 2
+
+        for i, t in enumerate(frame):
+            l, t0, r, b = draw.textbbox((0, 0), t, font=font)
+            w = r - l
+            x = (device.width - w) // 2
+            draw.text((x, y0 + i * line_h), t, fill=1, font=font)
+
+        device.display(img)
+        time.sleep(1.0)  # 1 second per frame
+
+    _clear(device)
+
+def _show_custom(device, args):
+    """
+    Display custom text lines from CLI arguments.
+    Usage:
+      python3 oled_status.py custom "Line 1" "Line 2"
+    If called with 'hold_s=None', message stays until overwritten.
+    """
+    lines = args[2:]
+    if not lines:
+        lines = ["(no text)"]
+
+    # Keep indefinitely (for "Checking GPS...")
+    if any("checking gps" in l.lower() for l in lines):
+        _show_lines(device, lines, hold_s=None, center=True)
+    else:
+        _show_lines(device, lines, hold_s=4, center=True)
+
+def _show_lines(device, lines, hold_s=None, center=False):
+    """
+    Render text; if hold_s is None, keep the message displayed indefinitely.
+    """
+    if device is None:
+        print("[OLED] (simulated)", " | ".join(lines))
+        if hold_s:
+            time.sleep(hold_s)
+        else:
+            print("[OLED] holding indefinitely (no timeout)")
+            while True:
+                time.sleep(60)
+        return
+
+    from PIL import Image
+    img, draw, font = _prep_canvas(device)
+    W, H = device.width, device.height
+
+    # Smaller font to fit more lines (esp. for 128x64)
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
+    except Exception:
+        font = ImageFont.load_default()
+
+    line_h = 10 if H <= 64 else 12
+    total_h = len(lines) * line_h
+    y0 = (H - total_h) // 2 if center else 0
+
+    for i, t in enumerate(lines[:7]):
+        t = str(t)
         l, t0, r, b = draw.textbbox((0, 0), t, font=font)
         w = r - l
-        x = (W - w) // 2
+        x = (W - w) // 2 if center else 0
         draw.text((x, y0 + i * line_h), t, fill=1, font=font)
 
     device.display(img)
-    time.sleep(duration_s)
-    _clear(device)
+
+    if hold_s:
+        time.sleep(hold_s)
+        _clear(device)
+
 
 # ---------- Custom Text Display ----------
 def _show_custom(device, args):

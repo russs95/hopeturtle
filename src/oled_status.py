@@ -96,6 +96,104 @@ def _clear(device):
     img = Image.new("1", (device.width, device.height), 0)
     device.display(img)
 
+#!/usr/bin/env python3
+"""
+HopeTurtle OLED Status Display
+- Auto-detects 128x64 vs 128x32 OLED.
+- Beta mode now keeps messages persistent until replaced.
+- Compatible with 0.91" and 0.96" SSD1306 I2C displays.
+
+Usage:
+  python3 oled_status.py boot-waking
+  python3 oled_status.py boot-alive
+  python3 oled_status.py gps-searching
+  python3 oled_status.py swim
+  python3 oled_status.py distance
+  python3 oled_status.py brief
+"""
+
+import os, sys, time, traceback, glob, csv, math
+from datetime import datetime, timezone
+
+# ---------- Config ----------
+DATA_DIR = os.path.expanduser(os.getenv("HT_DATA_DIR", "~/hopeturtle/data"))
+REF_LAT = float(os.getenv("HT_REF_LAT", "31.283"))
+REF_LON = float(os.getenv("HT_REF_LON", "34.234"))
+BETA_TEST_MODE = os.getenv("HT_OLED_BETA", "NO").upper()
+
+# ---------- OLED Setup ----------
+def _init_device():
+    try:
+        from luma.core.interface.serial import i2c
+        from luma.oled.device import ssd1306
+        serial = i2c(port=1, address=0x3C)
+        return ssd1306(serial)
+    except Exception as e:
+        print(f"[OLED] Not available: {e.__class__.__name__}: {e}")
+        return None
+
+def _prep_canvas(device):
+    from PIL import Image, ImageDraw, ImageFont
+    img = Image.new("1", (device.width, device.height), 0)
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+    except Exception:
+        font = ImageFont.load_default()
+    return img, draw, font
+
+def _show_lines(device, lines, hold_s=3, center=False):
+    """Render text; hold_s only applies if BETA_TEST_MODE == NO"""
+    if device is None:
+        print("[OLED] (simulated) " + " | ".join([str(x) for x in lines]))
+        if BETA_TEST_MODE == "NO":
+            time.sleep(hold_s)
+        else:
+            print("[OLED] BETA mode active — keeping message shown indefinitely.")
+            while True:
+                time.sleep(60)
+        return
+
+    from PIL import Image
+    img, draw, font = _prep_canvas(device)
+    W, H = device.width, device.height
+
+    # dynamic line spacing
+    if H <= 32:
+        line_h = 12
+    elif H <= 48:
+        line_h = 14
+    else:
+        line_h = 16
+
+    total_h = len(lines) * line_h
+    y0 = (H - total_h) // 2 if center else 0
+    for i, t in enumerate(lines[:5]):
+        if not isinstance(t, str):
+            t = str(t)
+        l, t0, r, b = draw.textbbox((0, 0), t, font=font)
+        w, h = r - l, b - t0
+        x = (W - w) // 2 if center else 0
+        draw.text((x, y0 + i * line_h), t, fill=1, font=font)
+
+    device.display(img)
+
+    if BETA_TEST_MODE == "NO":
+        time.sleep(hold_s)
+        _clear(device)
+    else:
+        print("[OLED] BETA mode active — message will persist until next update.")
+        # Keep alive indefinitely (so the buffer remains displayed)
+        while True:
+            time.sleep(60)
+
+def _clear(device):
+    if device is None:
+        return
+    from PIL import Image
+    img = Image.new("1", (device.width, device.height), 0)
+    device.display(img)
+
 # ---------- Animation ----------
 def _swim_animation(device, duration_s=5.0, fps=12):
     frames = [
@@ -218,6 +316,127 @@ def _show_custom(device, args):
     if not lines:
         lines = ["(no text)"]
     _show_lines(device, lines, hold_s=2, center=True)
+
+
+# ---------- Main ----------
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: oled_status.py [boot-waking|boot-alive|gps-searching|swim|distance|brief|custom]")
+        return 0
+
+    device = _init_device()
+    cmd = sys.argv[1].lower()
+
+    try:
+        if cmd == "boot-waking":
+            _show_lines(device, ["Hope Turtle", "is waking up!"], hold_s=3, center=True)
+
+        elif cmd == "boot-alive":
+            _show_lines(device, ["Hope Turtle", "is alive!"], hold_s=3, center=True)
+
+        elif cmd == "gps-searching":
+            _show_lines(device, ["GPS:", "Searching satellites…"], hold_s=3, center=True)
+
+        elif cmd == "swim":
+            _swim_animation(device)
+
+        elif cmd == "distance":
+            _show_last_distance(device)
+
+        elif cmd == "brief":
+            _show_brief(device)
+
+        elif cmd == "custom":
+            _show_custom(device, sys.argv)
+
+        else:
+            _show_lines(device, [f"Unknown cmd:", cmd], hold_s=2, center=True)
+
+    except Exception:
+        traceback.print_exc()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# ---------- GPS helpers ----------
+def _haversine_km(lat1, lon1, lat2, lon2):
+    R = 6371.0088
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = phi2 - phi1
+    dlmb = math.radians(lon2 - lon1)
+    a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlmb/2)**2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+def _find_last_fix_from_csvs(data_dir):
+    files = sorted(glob.glob(os.path.join(data_dir, "*_gps.csv")), key=os.path.getmtime, reverse=True)
+    for fp in files:
+        try:
+            rows = list(csv.DictReader(open(fp)))
+            for row in reversed(rows):
+                if (row.get("status") or "").lower() == "fix" and row.get("lat") and row.get("lon"):
+                    return fp, row.get("timestamp_utc"), float(row["lat"]), float(row["lon"]), row.get("sats") or "?"
+        except Exception:
+            continue
+    return None, None, None, None, None
+
+def _show_last_distance(device):
+    fp, ts, lat, lon, sats = _find_last_fix_from_csvs(DATA_DIR)
+    if not fp:
+        _show_lines(device, ["No last fix", "found"], hold_s=3, center=True)
+        return
+    km = _haversine_km(lat, lon, REF_LAT, REF_LON)
+    lines = [f"{km:.1f} km → Mawasi", f"({lat:.3f},{lon:.3f})", f"Sats: {sats}", ts]
+    _show_lines(device, lines, hold_s=4, center=True)
+
+def _show_brief(device):
+    fp, ts, lat, lon, sats = _find_last_fix_from_csvs(DATA_DIR)
+    if not fp:
+        _show_lines(device, ["No fix yet", "Check GPS..."], hold_s=3, center=True)
+        return
+    km = _haversine_km(lat, lon, REF_LAT, REF_LON)
+    lines = [f"{lat:.3f},{lon:.3f}", f"{km:.1f} km → Mawasi", f"Sats: {sats}"]
+    _show_lines(device, lines, hold_s=4, center=True)
+
+# ---------- Main ----------
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: oled_status.py [boot-waking|boot-alive|gps-searching|swim|distance|brief]")
+        return 0
+    device = _init_device()
+    cmd = sys.argv[1].lower()
+    try:
+        if cmd == "boot-waking":
+            _show_lines(device, ["Hope Turtle", "is waking up!"], hold_s=3, center=True)
+        elif cmd == "boot-alive":
+            _show_lines(device, ["Hope Turtle", "is alive!"], hold_s=3, center=True)
+        elif cmd == "gps-searching":
+            _show_lines(device, ["GPS:", "Searching satellites…"], hold_s=3, center=True)
+        elif cmd == "swim":
+            _swim_animation(device)
+        elif cmd == "distance":
+            _show_last_distance(device)
+        elif cmd == "brief":
+            _show_brief(device)
+        else:
+            _show_lines(device, [f"Unknown cmd:", cmd], hold_s=2, center=True)
+    except Exception:
+        traceback.print_exc()
+    return 0
+
+# ---------- Custom Text Display ----------
+def _show_custom(device, args):
+    """
+    Display custom text lines from CLI arguments.
+    Usage: python3 oled_status.py custom "Line 1" "Line 2" ...
+    """
+    lines = args[2:]
+    if not lines:
+        lines = ["(no text)"]
+    _show_lines(device, lines, hold_s=4, center=True)
 
 
 # ---------- Main ----------

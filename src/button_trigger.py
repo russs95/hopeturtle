@@ -73,7 +73,9 @@ def take_snapshot():
 
     # 1️⃣ Show timestamped check message
     now = datetime.now().strftime("%H:%M:%S")
-    oled_show(["Checking GPS", f"at {now}..."], hold_s=4)
+    # Show the timestamp message but immediately transition into the swim
+    # animation so the loading graphic appears without a noticeable pause.
+    oled_show(["Checking GPS", f"at {now}..."], hold_s=0)
 
     # 2️⃣ Start swim animation loop
     swim_proc = oled_swim_loop()

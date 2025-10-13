@@ -4,10 +4,16 @@ set -e
 echo "==> HopeTurtle updater starting..."
 
 REPO_DIR="$HOME/hopeturtle"
+REPO_URL="https://github.com/russs95/hopeturtle-beta.git"
 
 # ---- Go to repo and update ----
 cd "$REPO_DIR"
 echo "==> Pulling latest from Git..."
+CURRENT_REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
+if [ "$CURRENT_REMOTE" != "$REPO_URL" ]; then
+    echo "➡️  Updating origin remote to $REPO_URL"
+    git remote set-url origin "$REPO_URL"
+fi
 git fetch origin
 git reset --hard origin/main
 

@@ -4,7 +4,7 @@ set -e
 echo "==> HopeTurtle updater starting..."
 
 REPO_DIR="$HOME/hopeturtle"
-REPO_URL="https://github.com/russs95/hopeturtle-beta.git"
+REPO_URL="https://github.com/russs95/hopeturtle.git"
 
 # ---- Go to repo and update ----
 cd "$REPO_DIR"

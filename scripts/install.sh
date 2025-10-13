@@ -6,7 +6,7 @@ echo "==> HopeTurtle installer starting..."
 USER=$(whoami)
 HOME_DIR=$(eval echo ~$USER)
 REPO_DIR="$HOME_DIR/hopeturtle"
-REPO_URL="https://github.com/russs95/hopeturtle-beta.git"
+REPO_URL="https://github.com/russs95/hopeturtle.git"
 DATA_DIR="$REPO_DIR/data"
 LOG_FILE="/var/log/hopeturtle-install.log"
 

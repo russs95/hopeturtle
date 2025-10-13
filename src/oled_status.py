@@ -77,7 +77,7 @@ def _swim_animation(device):
     """Continuously show turtle swim animation until terminated."""
     turtle_frames = [
         [
-            "    ._______     ____  ",
+            "    ._______    ____  ",
             " /             \\|  0 | ",
             "|              |/ __\\| ",
             "|____________/      ",
@@ -85,9 +85,9 @@ def _swim_animation(device):
         ],
         [
             "    ._______     ____  ",
-            " /             \\|  0 | ",
-            "|              |/ __\\| ",
-            "|____________/      ",
+            " /             \\ |  0 | ",
+            "|              |/  __\\| ",
+            "|____________ /      ",
             "   |__|  |__|         ",
         ],
     ]

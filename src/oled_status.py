@@ -77,14 +77,14 @@ def _swim_animation(device):
     """Continuously show turtle swim animation until terminated."""
     turtle_frames = [
         [
-            "    ._______    ____  ",
+            "    ._______    ___  ",
             " /             \\|  0 | ",
             "|              |/ __\\| ",
             "|____________/      ",
             "  |__|  |__|         ",
         ],
         [
-            "    ._______     ____  ",
+            "    ._______     ___  ",
             " /             \\ |  0 | ",
             "|              |/  __\\| ",
             "|____________ /      ",
@@ -103,7 +103,7 @@ def _swim_animation(device):
         return
 
     from PIL import Image, ImageDraw, ImageFont
-    font_size = 7
+    font_size = 8
     try:
         font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
     except Exception:

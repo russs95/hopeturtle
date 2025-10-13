@@ -3,12 +3,30 @@ set -e
 
 echo "==> HopeTurtle installer starting..."
 
-USER=$(whoami)
+# Determine which user's home directory should hold the repo. When the
+# installer is invoked with sudo we want to keep using the calling user's
+# home directory instead of /root.
+if [ "$EUID" -eq 0 ] && [ -n "$SUDO_USER" ]; then
+    USER="$SUDO_USER"
+else
+    USER=$(whoami)
+fi
+
 HOME_DIR=$(eval echo ~$USER)
 REPO_DIR="$HOME_DIR/hopeturtle"
+SCRIPT_REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 REPO_URL="https://github.com/russs95/hopeturtle-beta.git"
-DATA_DIR="$REPO_DIR/data"
 LOG_FILE="/var/log/hopeturtle-install.log"
+
+# ---- Ensure repository is present and tracking the correct remote ----
+# If the script is being run from within a cloned repository, prefer that
+# location so we do not attempt to clone over it.
+if [ -d "$SCRIPT_REPO_DIR/.git" ]; then
+    REPO_DIR="$SCRIPT_REPO_DIR"
+    echo "==> Detected existing checkout at $REPO_DIR (running installer from repo)."
+fi
+
+DATA_DIR="$REPO_DIR/data"
 
 echo "==> Repo: $REPO_DIR"
 echo "==> Repo URL: $REPO_URL"
@@ -16,10 +34,14 @@ echo "==> Using user: $USER (home: $HOME_DIR)"
 echo "==> Data dir: $DATA_DIR"
 echo "==> Logging to $LOG_FILE"
 
-# ---- Ensure repository is present and tracking the correct remote ----
 if [ ! -d "$REPO_DIR/.git" ]; then
-    echo "==> Cloning HopeTurtle repository..."
-    git clone "$REPO_URL" "$REPO_DIR"
+    if [ -e "$REPO_DIR" ] && [ "$(ls -A "$REPO_DIR" 2>/dev/null)" ]; then
+        echo "❌ Existing directory at $REPO_DIR is not a git repository. Please move or remove it and re-run the installer."
+        exit 1
+    else
+        echo "==> Cloning HopeTurtle repository..."
+        git clone "$REPO_URL" "$REPO_DIR"
+    fi
 else
     echo "==> Ensuring HopeTurtle repository remote is up to date..."
     if ! CURRENT_REMOTE=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null); then

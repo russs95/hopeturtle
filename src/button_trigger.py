@@ -3,7 +3,7 @@
 HopeTurtle Button Trigger 🐢
 - Waits for button press on GPIO22 (pin 15)
 - When pressed:
-    1️⃣ Shows “Checking GPS position at HH:MM:SS...”
+    1️⃣ Shows “Checking GPS at HH:MM:SS...”
     2️⃣ Runs gps_snapshot.py repeatedly every few seconds
     3️⃣ Shows turtle swimming on OLED while waiting
     4️⃣ Displays GPS fix info for 5 seconds once obtained
@@ -73,7 +73,7 @@ def take_snapshot():
 
     # 1️⃣ Show timestamped check message
     now = datetime.now().strftime("%H:%M:%S")
-    oled_show([f"Checking GPS position", f"at {now}..."], hold_s=4)
+    oled_show(["Checking GPS", f"at {now}..."], hold_s=4)
 
     # 2️⃣ Start swim animation loop
     swim_proc = oled_swim_loop()

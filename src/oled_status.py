@@ -3,7 +3,7 @@
 HopeTurtle OLED Status Display 🐢
 - Supports 128x64 and 128x32 OLEDs
 - Text messages use size 12 font for readability
-- Turtle animation uses size 8 font for proper fit
+- Turtle animation uses size 7 font to fit six lines on screen
 """
 
 import os, sys, time, traceback
@@ -104,8 +104,9 @@ def _swim_animation(device):
         return
 
     from PIL import Image, ImageDraw, ImageFont
+    font_size = 7
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 8)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
     except Exception:
         font = ImageFont.load_default()
 
@@ -114,7 +115,7 @@ def _swim_animation(device):
             for frame in turtle_frames:
                 img = Image.new("1", (device.width, device.height), 0)
                 draw = ImageDraw.Draw(img)
-                line_h = 10
+                line_h = int(font_size * 1.3)
                 total_h = len(frame) * line_h
                 y0 = (device.height - total_h) // 2
                 for i, t in enumerate(frame):

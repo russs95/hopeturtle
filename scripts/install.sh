@@ -6,13 +6,30 @@ echo "==> HopeTurtle installer starting..."
 USER=$(whoami)
 HOME_DIR=$(eval echo ~$USER)
 REPO_DIR="$HOME_DIR/hopeturtle"
+REPO_URL="https://github.com/russs95/hopeturtle-beta.git"
 DATA_DIR="$REPO_DIR/data"
 LOG_FILE="/var/log/hopeturtle-install.log"
 
 echo "==> Repo: $REPO_DIR"
+echo "==> Repo URL: $REPO_URL"
 echo "==> Using user: $USER (home: $HOME_DIR)"
 echo "==> Data dir: $DATA_DIR"
 echo "==> Logging to $LOG_FILE"
+
+# ---- Ensure repository is present and tracking the correct remote ----
+if [ ! -d "$REPO_DIR/.git" ]; then
+    echo "==> Cloning HopeTurtle repository..."
+    git clone "$REPO_URL" "$REPO_DIR"
+else
+    echo "==> Ensuring HopeTurtle repository remote is up to date..."
+    if ! CURRENT_REMOTE=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null); then
+        CURRENT_REMOTE=""
+    fi
+    if [ "$CURRENT_REMOTE" != "$REPO_URL" ]; then
+        echo "➡️  Updating origin remote to $REPO_URL"
+        git -C "$REPO_DIR" remote set-url origin "$REPO_URL"
+    fi
+fi
 
 # ---- Ensure dependencies ----
 echo "==> Installing dependencies..."
@@ -124,6 +141,17 @@ EOF
 
 # ---- OLED Notification ----
 python3 src/oled_status.py notify-install || echo "⚠️ OLED notification skipped."
+
+# ---- Refresh OLED + button services ----
+echo "==> Reloading OLED and button services..."
+for svc in "hopeturtle-oled-boot.service" "hopeturtle-button.service"; do
+    echo "➡️  Restarting $svc..."
+    if sudo systemctl restart "$svc"; then
+        echo "✅ $svc restarted."
+    else
+        echo "⚠️ Failed to restart $svc. Check with: sudo systemctl status $svc"
+    fi
+done
 
 echo "✅ Install complete."
 echo "💡 Services active: pigpiod, hopeturtle-gps.timer, hopeturtle-boot.service, hopeturtle-button.service"

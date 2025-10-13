@@ -2,10 +2,11 @@
 """
 HopeTurtle OLED Status Display 🐢
 - Supports 128x64 and 128x32 OLEDs
-- Displays status, GPS, and ASCII turtle swim animation
+- Text messages use size 12 font for readability
+- Turtle animation uses size 8 font for proper fit
 """
 
-import os, sys, time, traceback, glob, csv, math
+import os, sys, time, traceback
 from datetime import datetime
 
 # ---------- Config ----------
@@ -24,25 +25,17 @@ def _init_device():
         print(f"[OLED] Not available: {e}")
         return None
 
-def _prep_canvas(device):
-    from PIL import Image, ImageDraw, ImageFont
-    img = Image.new("1", (device.width, device.height), 0)
-    draw = ImageDraw.Draw(img)
-    try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 8)
-    except Exception:
-        font = ImageFont.load_default()
-    return img, draw, font
-
 def _clear(device):
+    """Blank the screen."""
     if device is None:
         return
     from PIL import Image
     img = Image.new("1", (device.width, device.height), 0)
     device.display(img)
 
+# ---------- Text Display ----------
 def _show_lines(device, lines, hold_s=None, center=True):
-    """Render text; hold_s=None keeps it displayed indefinitely."""
+    """Render text messages in size 12."""
     if device is None:
         print("[OLED] (simulated)", " | ".join(lines))
         if hold_s:
@@ -52,15 +45,21 @@ def _show_lines(device, lines, hold_s=None, center=True):
                 time.sleep(60)
         return
 
-    from PIL import Image
-    img, draw, font = _prep_canvas(device)
-    W, H = device.width, device.height
+    from PIL import Image, ImageDraw, ImageFont
+    img = Image.new("1", (device.width, device.height), 0)
+    draw = ImageDraw.Draw(img)
 
-    line_h = 10
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+    except Exception:
+        font = ImageFont.load_default()
+
+    W, H = device.width, device.height
+    line_h = 14
     total_h = len(lines) * line_h
     y0 = (H - total_h) // 2 if center else 0
 
-    for i, t in enumerate(lines[:6]):
+    for i, t in enumerate(lines[:5]):
         t = str(t)
         l, t0, r, b = draw.textbbox((0, 0), t, font=font)
         w = r - l
@@ -72,23 +71,25 @@ def _show_lines(device, lines, hold_s=None, center=True):
         time.sleep(hold_s)
         _clear(device)
 
-# ---------- Swim / ASCII Turtle ----------
+# ---------- Turtle Animation ----------
 def _swim_animation(device):
     """Continuously show turtle swim animation until terminated."""
     turtle_frames = [
         [
-            "  _________   ____  ",
-            " /          \\|  o | ",
+            "                    "
+            "   _________   ____  ",
+            " /          \\|  0 | ",
             "|           |/ __\\| ",
             "|_____________/     ",
             "  |__|  |__|        ",
         ],
         [
-            "  _________   ____  ",
-            " /          \\|  o | ",
+            "                    "
+            "   _________   ____  ",
+            " /          \\|  0 | ",
             "|           |/ __\\| ",
             "|_____________/     ",
-            "  |_  |__|  _|      ",
+            "   |__|  |__|      ",
         ],
     ]
 
@@ -116,27 +117,23 @@ def _swim_animation(device):
                 line_h = 10
                 total_h = len(frame) * line_h
                 y0 = (device.height - total_h) // 2
-
                 for i, t in enumerate(frame):
                     l, t0, r, b = draw.textbbox((0, 0), t, font=font)
                     w = r - l
                     x = (device.width - w) // 2
                     draw.text((x, y0 + i * line_h), t, fill=1, font=font)
-
                 device.display(img)
                 time.sleep(0.5)
     except KeyboardInterrupt:
         _clear(device)
 
-# ---------- Custom Text Display ----------
+# ---------- Custom Text ----------
 def _show_custom(device, args):
+    """Display custom text lines from CLI arguments."""
     lines = args[2:]
     if not lines:
         lines = ["(no text)"]
-    if any("checking gps" in l.lower() for l in lines):
-        _show_lines(device, lines, hold_s=4, center=True)
-    else:
-        _show_lines(device, lines, hold_s=4, center=True)
+    _show_lines(device, lines, hold_s=4, center=True)
 
 # ---------- Main ----------
 def main():
@@ -158,5 +155,9 @@ def main():
         traceback.print_exc()
     return 0
 
+
 if __name__ == "__main__":
     sys.exit(main())
+
+
+

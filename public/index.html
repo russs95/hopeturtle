@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hope Turtle Project</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <div class="site-branding">
+          <p class="site-branding__title">Hope Turtle Project</p>
+          <p class="site-branding__subtitle">Solar-powered marine aid relays</p>
+        </div>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <ul class="primary-nav__menu">
+            <li><a class="is-active" href="index.html">Home</a></li>
+            <li><a href="#reports">Reports</a></li>
+            <li><a href="profile.html">Profile</a></li>
+            <li><a href="about.html">About</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1 class="hero__title">Community-built turtles that ferry hope across blue corridors.</h1>
+          <p class="hero__lead">
+            Hope Turtle units combine bamboo hulls, open-source avionics, and solar propulsion to move lightweight payloads,
+            letters, and telemetry hardware without fossil fuels. Each turtle can be assembled with local tools, tracked in real
+            time, and coordinated with fleets.
+          </p>
+          <div class="button-group">
+            <a class="button button--primary" href="about.html">Learn about the project</a>
+            <a class="button button--ghost" href="#reports">See latest reports</a>
+          </div>
+        </div>
+        <div class="section-card">
+          <h2>Fleet snapshot</h2>
+          <p>Live signals from prototypes currently patrolling Pacific island chains.</p>
+          <ul class="reports-list">
+            <li class="report-item">
+              <strong>HT-008 &middot; Savai'i Relay</strong>
+              <span>Battery 78% &mdash; Drift speed 1.1 knots &mdash; Next health ping 12 minutes</span>
+            </li>
+            <li class="report-item">
+              <strong>HT-014 &middot; Coral Nursery Escort</strong>
+              <span>Battery 65% &mdash; Solar input 112W &mdash; Algae sensor nominal</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="reports" class="section-card">
+        <h2>Reports</h2>
+        <p>Weekly highlights from the Hope Turtle community network.</p>
+        <ul class="reports-list">
+          <li class="report-item">
+            <strong>Logistics report &middot; Week 32</strong>
+            <span>Four new turtles launched from Cebu City, each carrying micro libraries translated into Bisaya and Tagalog.</span>
+          </li>
+          <li class="report-item">
+            <strong>Telemetry report &middot; Week 31</strong>
+            <span>GPS variance reduced 14% after updating the Kalman smoothing window on the Pi Zero flight stack.</span>
+          </li>
+          <li class="report-item">
+            <strong>Humanitarian report &middot; Week 30</strong>
+            <span>Twenty-four letters delivered between Vanuatu islands, triggered by elders tapping the bamboo button beacon.</span>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
